@@ -46,7 +46,7 @@ export async function verifyEmailByToken(token: string) {
   if (!user) throw new AppError('Invalid token', 400);
 
   await prisma.user.update({
-    where: { id: user.id },
+    where: { userId: user.userId },
     data: { token: null, expirationDate: null },
   });
 }
@@ -62,7 +62,7 @@ export async function verifyEmailByOtp(email: string, otp: string) {
   if (!valid) throw new AppError('Invalid OTP', 400);
 
   await prisma.user.update({
-    where: { id: user.id },
+    where: { userId: user.userId },
     data: { token: null, expirationDate: null, resetPasswordOTP: null, resetPasswordOTPExpirationDate: null },
   });
 }
@@ -71,7 +71,7 @@ export async function login(email: string, password: string): Promise<string> {
   const user = await prisma.user.findUnique({ where: { email } });
   console.log('Login attempt for:', email);
   console.log('User found:', !!user);
-  console.log('User ID:', user?.id);
+  console.log('User ID:', user?.userId);
   console.log('Has passwordHash:', !!user?.passwordHash);
   console.log('Password hash (first 30 chars):', user?.passwordHash?.substring(0, 30));
   
@@ -83,7 +83,7 @@ export async function login(email: string, password: string): Promise<string> {
   if (!match) throw new AppError('Invalid credentials', 401);
 
   console.log('About to create JWT token...');
-  const token = jwt.sign({ sub: user.id.toString(), email: user.email }, jwtSecret, { expiresIn: '1h' });
+  const token = jwt.sign({ sub: user.userId.toString(), email: user.email }, jwtSecret, { expiresIn: '1h' });
   console.log('JWT token created successfully');
   return token;
 }
@@ -96,7 +96,7 @@ export async function forgotPassword(email: string) {
   const resetExpiresAt = addHours(new Date(), 1);
 
   await prisma.user.update({
-    where: { id: user.id },
+    where: { userId: user.userId },
     data: { resetPasswordOTP: resetToken, resetPasswordOTPExpirationDate: resetExpiresAt },
   });
 
@@ -116,7 +116,7 @@ export async function resetPassword(token: string, newPassword: string) {
 
   const passwordHash = await bcrypt.hash(newPassword, 10);
   await prisma.user.update({
-    where: { id: user.id },
+    where: { userId: user.userId },
     data: { passwordHash, resetPasswordOTP: null, resetPasswordOTPExpirationDate: null },
   });
 }
@@ -130,7 +130,7 @@ export async function changePassword(email: string, currentPassword: string, new
 
   const passwordHash = await bcrypt.hash(newPassword, 10);
   await prisma.user.update({
-    where: { id: user.id },
+    where: { userId: user.userId },
     data: { passwordHash },
   });
 }

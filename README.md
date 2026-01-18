@@ -1,22 +1,63 @@
-# BDSThat Backend API
+# BDSTHAT Backend - Real Estate Platform API
 
-Node.js + Express + TypeScript backend with email-based authentication.
+A comprehensive backend API for a real estate marketplace platform built with Node.js, Express, TypeScript, Prisma, and PostgreSQL (Neon).
 
-## Features
+## ✅ Implemented Features - Phase 1 Complete!
 
-- Email sign-up with verification via link or OTP
-- JWT-based login and session management
-- Prisma ORM with SQLite (dev) / PostgreSQL (prod)
-- Password hashing with bcryptjs
-- Email delivery via Nodemailer
-- Input validation with Zod
-- TypeScript strict mode
-- Jest testing suite
+### 🏠 Property & Listing Management (29 Endpoints)
+
+#### Authentication System
+- ✅ User registration (email/phone)
+- ✅ Email/OTP verification  
+- ✅ JWT authentication
+- ✅ Password reset/change
+
+#### Property Management (6 endpoints)
+- ✅ CRUD operations with ownership validation
+- ✅ Advanced filtering (type, bedrooms, area, location)
+- ✅ My properties dashboard
+
+#### Listing Management (11 endpoints)
+- ✅ Create/manage real estate listings
+- ✅ **Priority system** (normal 0, silver 1, gold 2)
+- ✅ **Push to top** with credit management
+- ✅ **Recreate expired listings**
+- ✅ Related listings algorithm
+- ✅ AI-generated titles & descriptions
+- ✅ View counting
+- ✅ User public profiles
+
+#### Media Management (5 endpoints)
+- ✅ Multiple file uploads (max 20 files, 50MB each)
+- ✅ Bulk delete operations
+- ✅ Media ordering
+
+#### Document Management (4 endpoints)
+- ✅ PDF/DOCX uploads
+- ✅ Legal document categorization
+
+#### Favorites System (3 endpoints)
+- ✅ Like/unlike listings
+- ✅ My favorites with full details
+
+## 🛠️ Tech Stack
+
+- **Runtime**: Node.js 18+ with TypeScript 5.9
+- **Framework**: Express.js
+- **ORM**: Prisma 6.19.2
+- **Database**: PostgreSQL (Neon hosted)
+- **Auth**: JWT + bcryptjs
+- **File Upload**: Multer
+- **Validation**: Zod
+- **Email**: Nodemailer
+- **Dev Tools**: ts-node-dev with hot reload
 
 ## Requirements
 
 - Node.js 18+
-- npm
+- PostgreSQL database
+- SMTP server for emails
+- npm or yarn
 
 ## Setup
 

@@ -4,6 +4,11 @@ import prisma from './utils/prisma';
 
 dotenv.config();
 
+// Fix BigInt serialization for JSON responses
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 
 async function main() {

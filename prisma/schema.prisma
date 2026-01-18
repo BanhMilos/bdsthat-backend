@@ -7,654 +7,718 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id                                          BigInt              @id @default(autoincrement())
-  email                                       String              @unique @db.VarChar(255)
-  passwordHash                                String              @map("password_hash") @db.VarChar(255)
-  fullname                                    String?             @db.VarChar(255)
-  phone                                       String?             @db.VarChar(20)
-  address                                     String?
-  idCardNumber                                String?             @map("id_card_number") @db.VarChar(50)
-  idCardType                                  user_idcard_type?   @map("id_card_type")
-  primaryRole                                 user_primary_role?  @map("primary_role")
-  status                                      user_status?
-  ekycVerified                                Int?                @map("ekyc_verified") @default(0)
-  token                                       String?             @db.VarChar(1024)
-  expirationDate                              DateTime?           @map("expiration_date") @db.Timestamptz(6)
-  resetPasswordOTP                            String?             @map("reset_password_otp") @db.VarChar(1024)
-  resetPasswordOTPExpirationDate              DateTime?           @map("reset_password_otp_expiration_date") @db.Timestamptz(6)
-  lastActive                                  DateTime?           @map("last_active") @default(now()) @db.Timestamptz(6)
-  agentCertificate                            String?             @map("agent_certificate")
-  agentStatus                                 String?             @map("agent_status") @db.VarChar(50)
-  idCardDocuments                             Json?               @map("id_card_documents")
-  avatar                                      String?
-  idCardPlaceIfIssue                          String?             @map("id_card_place_if_issue") @db.VarChar(256)
-  idCardIssueDate                             DateTime?           @map("id_card_issue_date") @db.Timestamptz(6)
-  balance                                     Float?
-  lifetimeBalance                             Float?              @map("lifetime_balance")
-  createdAt                                   DateTime?           @map("created_at") @default(now()) @db.Timestamptz(6)
-  updatedAt                                   DateTime?           @map("updated_at") @default(now()) @db.Timestamptz(6)
-  Appointment                                 Appointment[]
-  Audit                                       Audit[]
-  ChatRoom                                    ChatRoom[]
-  Comment                                     Comment[]
-  Device                                      Device[]
-  Document                                    Document[]
-  Favorite                                    Favorite[]
-  Feedback                                    Feedback[]
-  Lead                                        Lead[]
-  Listing                                     Listing[]
-  Media                                       Media[]
-  Member                                      Member[]
-  Message                                     Message[]
-  News                                        News[]
-  Notification                                Notification[]
-  OTP                                         OTP[]
-  Panorama                                    Panorama[]
-  Payment                                     Payment[]
-  Property_Property_authorized_agent_idToUser Property[]          @relation("Property_authorized_agent_idToUser")
-  Property_Property_authorized_user_idToUser  Property[]          @relation("Property_authorized_user_idToUser")
-  Property_Property_user_idToUser             Property[]          @relation("Property_user_idToUser")
-  Subscription                                Subscription[]
-  Transaction_Transaction_agent_idToUser      Transaction[]       @relation("Transaction_agent_idToUser")
-  Transaction_Transaction_guest_idToUser      Transaction[]       @relation("Transaction_guest_idToUser")
-  Transaction_Transaction_seller_idToUser     Transaction[]       @relation("Transaction_seller_idToUser")
-  WalletTransaction                           WalletTransaction[]
-
-  @@map("User")
-}
-
 model Appointment {
-  id            BigInt              @id @default(autoincrement())
-  property_id   BigInt
-  user_id       BigInt
-  listing_id    BigInt
+  appointmentId BigInt              @id @default(autoincrement())
+  propertyId    BigInt
+  userId        BigInt
+  listingId     BigInt
   status        appointment_status? @default(PENDING)
   datetime      DateTime            @db.Timestamptz(6)
   description   String?
-  cancel_reason String?
+  cancelReason  String?
   address       String?
-  created_at    DateTime?           @default(now()) @db.Timestamptz(6)
-  updated_at    DateTime?           @default(now()) @db.Timestamptz(6)
-  Listing       Listing             @relation(fields: [listing_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Property      Property            @relation(fields: [property_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  User          User                @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt     DateTime?           @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime?           @default(now()) @db.Timestamptz(6)
+  Listing       Listing             @relation(fields: [listingId], references: [listingId], onDelete: NoAction, onUpdate: NoAction)
+  Property      Property            @relation(fields: [propertyId], references: [propertyId], onDelete: NoAction, onUpdate: NoAction)
+  User          User                @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([datetime], map: "idx_appointment_datetime")
+  @@index([listingId], map: "idx_appointment_listing")
+  @@index([userId], map: "idx_appointment_user")
 }
 
 model Area {
-  id          BigInt    @id @default(autoincrement())
-  name        String    @db.VarChar(255)
-  type        area_type
-  parent_id   BigInt?
-  latitude    Float?
-  longitude   Float?
-  is_old_area Int?      @default(0)
-  created_at  DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
-  Area        Area?     @relation("AreaToArea", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  other_Area  Area[]    @relation("AreaToArea")
+  areaId     BigInt    @id @default(autoincrement())
+  name       String    @db.VarChar(255)
+  type       area_type
+  parentId   BigInt?
+  latitude   Float?
+  longitude  Float?
+  isOldArea  Int?      @default(0)
+  createdAt  DateTime? @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime? @default(now()) @db.Timestamptz(6)
+  Area       Area?     @relation("AreaToArea", fields: [parentId], references: [areaId], onDelete: NoAction, onUpdate: NoAction)
+  other_Area Area[]    @relation("AreaToArea")
 }
 
 model Audit {
-  id          BigInt       @id @default(autoincrement())
-  object_id   BigInt
-  object_type String       @db.VarChar(50)
-  action      audit_action
-  user_id     BigInt
-  timestamp   DateTime     @db.Timestamptz(6)
-  details     Json?
-  created_at  DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime?    @default(now()) @db.Timestamptz(6)
-  User        User         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  auditId    BigInt       @id @default(autoincrement())
+  objectId   BigInt
+  objectType String       @db.VarChar(50)
+  action     audit_action
+  userId     BigInt
+  timestamp  DateTime     @db.Timestamptz(6)
+  details    Json?
+  createdAt  DateTime?    @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime?    @default(now()) @db.Timestamptz(6)
+  User       User         @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model Building {
-  id               BigInt       @id @default(autoincrement())
-  project_id       BigInt?
-  subdivision_id   BigInt?
-  name             String       @db.VarChar(255)
-  address          String?      @db.VarChar(255)
-  num_floors       Int?
-  num_units        Int?
-  approximate_area Decimal?     @db.Decimal(10, 2)
-  units_per_floor  Int?
-  num_basements    Int?
-  description      String?
-  images           Json?
-  created_at       DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime?    @default(now()) @db.Timestamptz(6)
-  Project          Project?     @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Subdivision      Subdivision? @relation(fields: [subdivision_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Media            Media[]
-  Panorama         Panorama[]
+  buildingId      BigInt       @id @default(autoincrement())
+  projectId       BigInt?
+  subdivisionId   BigInt?
+  name            String       @db.VarChar(255)
+  address         String?      @db.VarChar(255)
+  numFloors       Int?
+  numUnits        Int?
+  approximateArea Decimal?     @db.Decimal(10, 2)
+  unitsPerFloor   Int?
+  numBasements    Int?
+  description     String?
+  images          Json?
+  createdAt       DateTime?    @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime?    @default(now()) @db.Timestamptz(6)
+  Project         Project?     @relation(fields: [projectId], references: [projectId], onDelete: NoAction, onUpdate: NoAction)
+  Subdivision     Subdivision? @relation(fields: [subdivisionId], references: [subdivisionId], onDelete: NoAction, onUpdate: NoAction)
+  Media           Media[]
+  Panorama        Panorama[]
+  Property        Property[]
 }
 
 model Category {
-  id             BigInt     @id @default(autoincrement())
+  categoryId     BigInt     @id @default(autoincrement())
   name           String     @db.VarChar(255)
   description    String?
-  parent_id      BigInt?
-  created_at     DateTime?  @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime?  @default(now()) @db.Timestamptz(6)
-  Category       Category?  @relation("CategoryToCategory", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  parentId       BigInt?
+  createdAt      DateTime?  @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime?  @default(now()) @db.Timestamptz(6)
+  Category       Category?  @relation("CategoryToCategory", fields: [parentId], references: [categoryId], onDelete: NoAction, onUpdate: NoAction)
   other_Category Category[] @relation("CategoryToCategory")
+  News           News[]
 }
 
 model ChatRoom {
-  id              BigInt    @id @default(autoincrement())
-  listing_id      BigInt?
-  is_active       Boolean?  @default(true)
-  members_count   Int?      @default(0)
-  last_message_id BigInt?
-  last_message_at DateTime? @db.Timestamptz(6)
-  created_by      BigInt
-  created_at      DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime? @default(now()) @db.Timestamptz(6)
-  User            User      @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  roomId                                  BigInt    @id @default(autoincrement())
+  listingId                               BigInt?
+  isActive                                Boolean?  @default(true)
+  membersCount                            Int?      @default(0)
+  lastMessageId                           BigInt?
+  lastMessageAt                           DateTime? @db.Timestamptz(6)
+  createdBy                               BigInt
+  createdAt                               DateTime? @default(now()) @db.Timestamptz(6)
+  updatedAt                               DateTime? @default(now()) @db.Timestamptz(6)
+  User                                    User      @relation(fields: [createdBy], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+  Listing                                 Listing?  @relation(fields: [listingId], references: [listingId], onDelete: NoAction, onUpdate: NoAction)
+  Message_ChatRoom_lastMessageIdToMessage Message?  @relation("ChatRoom_lastMessageIdToMessage", fields: [lastMessageId], references: [messageId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chatroom_last_message")
+  Member                                  Member[]
+  Message_Message_roomIdToChatRoom        Message[] @relation("Message_roomIdToChatRoom")
 }
 
 model Comment {
-  id         BigInt    @id @default(autoincrement())
-  news_id    BigInt?
-  content    String?
-  user_id    BigInt?
-  status     String?   @db.VarChar(20)
-  created_at DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at DateTime? @default(now()) @db.Timestamptz(6)
-  News       News?     @relation(fields: [news_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  User       User?     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  commentId BigInt          @id @default(autoincrement())
+  newsId    BigInt?
+  content   String?
+  userId    BigInt?
+  status    comment_status?
+  createdAt DateTime?       @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime?       @default(now()) @db.Timestamptz(6)
+  News      News?           @relation(fields: [newsId], references: [newsId], onDelete: NoAction, onUpdate: NoAction)
+  User      User?           @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model Config {
-  id          BigInt    @id @default(autoincrement())
+  configId    BigInt    @id @default(autoincrement())
   key         String    @db.VarChar(255)
   value       String
-  platform    String?   @db.VarChar(20)
+  platform    String?   @db.VarChar(50)
   public      Int?      @default(1)
   description String?
-  created_at  DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+  createdAt   DateTime? @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime? @default(now()) @db.Timestamptz(6)
 }
 
 model Device {
-  id             BigInt    @id @default(autoincrement())
-  user_id        BigInt
-  uuid           String    @db.VarChar(256)
-  platform       String?   @db.VarChar(256)
-  platform_token String?   @db.VarChar(2048)
-  online         Int?      @default(0)
-  granted        Int?      @default(0)
-  ip_address     String?   @db.VarChar(256)
-  created_at     DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime? @default(now()) @db.Timestamptz(6)
-  User           User      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  deviceId      BigInt    @id @default(autoincrement())
+  userId        BigInt
+  uuid          String    @db.VarChar(256)
+  platform      String?   @db.VarChar(256)
+  platformToken String?   @db.VarChar(2048)
+  online        Int?      @default(0)
+  granted       Int?      @default(0)
+  ipAddress     String?   @db.VarChar(256)
+  createdAt     DateTime? @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime? @default(now()) @db.Timestamptz(6)
+  User          User      @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model Document {
-  id          BigInt               @id @default(autoincrement())
-  project_id  BigInt?
-  property_id BigInt?
+  documentId  BigInt               @id @default(autoincrement())
+  userId      BigInt
+  projectId   BigInt?
+  propertyId  BigInt?
   title       String               @db.VarChar(255)
   description String?
   url         String               @db.VarChar(500)
   path        String?              @db.VarChar(500)
   type        document_type?
-  legal_type  document_legal_type?
-  user_id     BigInt
-  created_at  DateTime?            @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime?            @default(now()) @db.Timestamptz(6)
-  Project     Project?             @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Property    Property?            @relation(fields: [property_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  User        User                 @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  legalType   document_legal_type?
+  createdAt   DateTime?            @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime?            @default(now()) @db.Timestamptz(6)
+  Project     Project?             @relation(fields: [projectId], references: [projectId], onDelete: NoAction, onUpdate: NoAction)
+  Property    Property?            @relation(fields: [propertyId], references: [propertyId], onDelete: NoAction, onUpdate: NoAction)
+  User        User                 @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([projectId], map: "idx_document_project")
+  @@index([propertyId], map: "idx_document_property")
 }
 
 model FAQ {
-  id         BigInt        @id @default(autoincrement())
-  question   String        @db.VarChar(255)
-  answer     String
-  project_id BigInt?
-  category   faq_category?
-  status     faq_status    @default(ACTIVE)
-  order      Int           @default(0)
-  created_at DateTime?     @default(now()) @db.Timestamptz(6)
-  updated_at DateTime?     @default(now()) @db.Timestamptz(6)
-  Project    Project?      @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  faqId     BigInt        @id @default(autoincrement())
+  question  String        @db.VarChar(255)
+  answer    String
+  projectId BigInt?
+  category  faq_category?
+  status    faq_status    @default(ACTIVE)
+  order     Int           @default(0)
+  createdAt DateTime?     @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime?     @default(now()) @db.Timestamptz(6)
+  Project   Project?      @relation(fields: [projectId], references: [projectId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model Favorite {
-  id          BigInt    @id @default(autoincrement())
-  type        String?   @default("LISTING") @db.VarChar(20)
-  user_id     BigInt
-  property_id BigInt?
-  listing_id  BigInt?
-  news_id     BigInt?
-  created_at  DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
-  Property    Property? @relation(fields: [property_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  User        User      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  favoriteId BigInt         @id @default(autoincrement())
+  type       favorite_type? @default(LISTING)
+  userId     BigInt
+  propertyId BigInt?
+  listingId  BigInt?
+  newsId     BigInt?
+  createdAt  DateTime?      @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime?      @default(now()) @db.Timestamptz(6)
+  Listing    Listing?       @relation(fields: [listingId], references: [listingId], onDelete: NoAction, onUpdate: NoAction)
+  Property   Property?      @relation(fields: [propertyId], references: [propertyId], onDelete: NoAction, onUpdate: NoAction)
+  User       User           @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([listingId], map: "idx_favorite_listing")
+  @@index([userId], map: "idx_favorite_user")
 }
 
 model Feedback {
-  id         BigInt    @id @default(autoincrement())
-  user_id    BigInt
+  feedbackId BigInt    @id @default(autoincrement())
+  userId     BigInt
   content    String
   rating     Int?
-  created_at DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at DateTime? @default(now()) @db.Timestamptz(6)
-  User       User      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt  DateTime? @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime? @default(now()) @db.Timestamptz(6)
+  User       User      @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model Investor {
-  id          BigInt    @id @default(autoincrement())
+  investorId  BigInt    @id @default(autoincrement())
   name        String    @db.VarChar(255)
   address     String?   @db.VarChar(255)
   phone       String?   @db.VarChar(20)
   email       String?   @db.VarChar(255)
   website     String?   @db.VarChar(255)
   description String?
-  created_at  DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+  createdAt   DateTime? @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime? @default(now()) @db.Timestamptz(6)
+  Project     Project[]
 }
 
 model Lead {
-  id          BigInt       @id @default(autoincrement())
-  email       String?      @db.VarChar(255)
-  phone       String?      @db.VarChar(20)
-  source      String?      @db.VarChar(100)
-  project_id  BigInt?
-  status      lead_status? @default(NEW)
-  assigned_to BigInt?
-  notes       String?
-  fullname    String?      @db.VarChar(255)
-  created_at  DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime?    @default(now()) @db.Timestamptz(6)
-  User        User?        @relation(fields: [assigned_to], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Project     Project?     @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  leadId     BigInt       @id @default(autoincrement())
+  email      String?      @db.VarChar(255)
+  phone      String?      @db.VarChar(20)
+  fullname   String?      @db.VarChar(255)
+  source     String?      @db.VarChar(100)
+  projectId  BigInt?
+  status     lead_status? @default(NEW)
+  assignedTo BigInt?
+  notes      String?
+  createdAt  DateTime?    @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime?    @default(now()) @db.Timestamptz(6)
+  User       User?        @relation(fields: [assignedTo], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+  Project    Project?     @relation(fields: [projectId], references: [projectId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model Listing {
-  id               BigInt          @id @default(autoincrement())
-  property_id      BigInt
-  user_id          BigInt
-  title            String          @db.VarChar(255)
-  description      String?
-  price            Decimal         @db.Decimal(15, 2)
-  listing_type     listing_type?
-  status           listing_status? @default(PENDING)
-  created_at       DateTime?       @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime?       @default(now()) @db.Timestamptz(6)
-  verified         Int?            @default(0)
-  expiration_date  DateTime?       @db.Timestamptz(6)
-  currency         String?         @default("VND") @db.VarChar(10)
-  listing_messages Json?
-  is_featured      Int             @default(0)
-  views            Int?            @default(0)
-  priority         Int
-  pushed_date      DateTime        @db.Timestamptz(6)
-  credit_source    String?         @db.VarChar(50)
-  push_count       Int             @default(0)
-  push_remain      Int?            @default(0)
-  title_ai         String?         @db.VarChar(255)
-  description_ai   String?
-  Appointment      Appointment[]
-  Property         Property        @relation(fields: [property_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  User             User            @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Payment          Payment[]
-  Transaction      Transaction[]
+  listingId       BigInt                 @id @default(autoincrement())
+  propertyId      BigInt
+  userId          BigInt
+  title           String                 @db.VarChar(255)
+  description     String?
+  price           Decimal                @db.Decimal(15, 2)
+  listingType     listing_type?
+  status          listing_status?        @default(PENDING)
+  createdAt       DateTime?              @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime?              @default(now()) @db.Timestamptz(6)
+  verified        Int?                   @default(0)
+  expirationDate  DateTime?              @db.Timestamptz(6)
+  currency        String?                @default("VND") @db.VarChar(10)
+  listingMessages Json?
+  isFeatured      Int                    @default(0)
+  views           Int?                   @default(0)
+  priority        Int
+  pushedDate      DateTime               @db.Timestamptz(6)
+  creditSource    listing_credit_source?
+  pushCount       Int                    @default(0)
+  pushRemain      Int?                   @default(0)
+  titleAI         String?                @db.VarChar(255)
+  descriptionAI   String?
+  Appointment     Appointment[]
+  ChatRoom        ChatRoom[]
+  Favorite        Favorite[]
+  Property        Property               @relation(fields: [propertyId], references: [propertyId], onDelete: NoAction, onUpdate: NoAction)
+  User            User                   @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+  Payment         Payment[]
+  Transaction     Transaction[]
+
+  @@index([priority(sort: Desc)], map: "idx_listing_priority")
+  @@index([propertyId], map: "idx_listing_property")
+  @@index([pushedDate(sort: Desc)], map: "idx_listing_pushed_date")
+  @@index([status], map: "idx_listing_status")
+  @@index([listingType], map: "idx_listing_type")
+  @@index([userId], map: "idx_listing_user")
 }
 
 model ListingPrice {
-  id               BigInt                  @id @default(autoincrement())
-  priority         Int                     @default(0)
-  price            Float
-  price_before_tax Float
-  tax_rate         Float
-  description      String?
-  duration_days    Int
-  push_count       Int                     @default(0)
-  currency         listing_price_currency? @default(VND)
-  created_at       DateTime?               @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime?               @default(now()) @db.Timestamptz(6)
+  priceId        BigInt    @id @default(autoincrement())
+  priority       Int       @default(0)
+  price          Float
+  priceBeforeTax Float
+  taxRate        Float
+  description    String?
+  durationDays   Int
+  pushCount      Int       @default(0)
+  currency       String?   @db.VarChar(10)
+  createdAt      DateTime? @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime? @default(now()) @db.Timestamptz(6)
 }
 
 model Media {
-  id             BigInt       @id @default(autoincrement())
-  property_id    BigInt?
-  project_id     BigInt?
-  building_id    BigInt?
-  subdivision_id BigInt?
-  type           media_type
-  url            String       @db.VarChar(500)
-  path           String?      @db.VarChar(500)
-  order          Int?         @default(0)
-  user_id        BigInt
-  created_at     DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime?    @default(now()) @db.Timestamptz(6)
-  Building       Building?    @relation(fields: [building_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Project        Project?     @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Property       Property?    @relation(fields: [property_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Subdivision    Subdivision? @relation(fields: [subdivision_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  User           User         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  mediaId                                 BigInt       @id @default(autoincrement())
+  propertyId                              BigInt?
+  projectId                               BigInt?
+  buildingId                              BigInt?
+  subdivisionId                           BigInt?
+  userId                                  BigInt
+  type                                    media_type
+  url                                     String       @db.VarChar(500)
+  path                                    String?      @db.VarChar(500)
+  order                                   Int?         @default(0)
+  createdAt                               DateTime?    @default(now()) @db.Timestamptz(6)
+  updatedAt                               DateTime?    @default(now()) @db.Timestamptz(6)
+  Building                                Building?    @relation(fields: [buildingId], references: [buildingId], onDelete: NoAction, onUpdate: NoAction)
+  Project_Media_projectIdToProject        Project?     @relation("Media_projectIdToProject", fields: [projectId], references: [projectId], onDelete: NoAction, onUpdate: NoAction)
+  Property_Media_propertyIdToProperty     Property?    @relation("Media_propertyIdToProperty", fields: [propertyId], references: [propertyId], onDelete: NoAction, onUpdate: NoAction)
+  Subdivision                             Subdivision? @relation(fields: [subdivisionId], references: [subdivisionId], onDelete: NoAction, onUpdate: NoAction)
+  User                                    User         @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+  Project_Project_primaryMediaIdToMedia   Project[]    @relation("Project_primaryMediaIdToMedia")
+  Property_Property_primaryMediaIdToMedia Property[]   @relation("Property_primaryMediaIdToMedia")
+
+  @@index([projectId], map: "idx_media_project")
+  @@index([propertyId], map: "idx_media_property")
+  @@index([userId], map: "idx_media_user")
 }
 
 model Member {
-  id           BigInt    @id @default(autoincrement())
-  user_id      BigInt
-  room_id      BigInt
-  role         String?   @db.VarChar(256)
-  status       String?   @db.VarChar(50)
-  notification Int?      @default(1)
-  created_at   DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at   DateTime? @default(now()) @db.Timestamptz(6)
-  User         User      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  memberId     BigInt         @id @default(autoincrement())
+  userId       BigInt
+  roomId       BigInt
+  role         String?        @db.VarChar(256)
+  status       member_status?
+  notification Int?           @default(1)
+  createdAt    DateTime?      @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime?      @default(now()) @db.Timestamptz(6)
+  ChatRoom     ChatRoom       @relation(fields: [roomId], references: [roomId], onDelete: NoAction, onUpdate: NoAction)
+  User         User           @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model Message {
-  id           BigInt        @id @default(autoincrement())
-  room_id      BigInt
-  sender_id    BigInt
-  content      String
-  message_type message_type? @default(TEXT)
-  is_read      Boolean?      @default(false)
-  media        String?
-  metadata     Json?
-  created_at   DateTime?     @default(now()) @db.Timestamptz(6)
-  updated_at   DateTime?     @default(now()) @db.Timestamptz(6)
-  User         User          @relation(fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  messageId                                BigInt        @id @default(autoincrement())
+  roomId                                   BigInt
+  senderId                                 BigInt
+  content                                  String
+  messageType                              message_type? @default(TEXT)
+  isRead                                   Boolean?      @default(false)
+  media                                    String?
+  metadata                                 Json?
+  createdAt                                DateTime?     @default(now()) @db.Timestamptz(6)
+  updatedAt                                DateTime?     @default(now()) @db.Timestamptz(6)
+  ChatRoom_ChatRoom_lastMessageIdToMessage ChatRoom[]    @relation("ChatRoom_lastMessageIdToMessage")
+  ChatRoom_Message_roomIdToChatRoom        ChatRoom      @relation("Message_roomIdToChatRoom", fields: [roomId], references: [roomId], onDelete: NoAction, onUpdate: NoAction)
+  User                                     User          @relation(fields: [senderId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([roomId], map: "idx_message_room")
+  @@index([senderId], map: "idx_message_sender")
 }
 
 model News {
-  id             BigInt       @id @default(autoincrement())
-  category_id    BigInt?
-  title          String       @db.VarChar(255)
-  content        String
-  user_id        BigInt?
-  published_date DateTime?    @db.Timestamptz(6)
-  status         news_status?
-  author         String?      @db.VarChar(100)
-  source_url     String?      @db.VarChar(2048)
-  source         String?      @db.VarChar(2048)
-  project_id     BigInt?
-  tags           Json?
-  views          Int          @default(0)
-  created_at     DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime?    @default(now()) @db.Timestamptz(6)
-  Comment        Comment[]
-  Project        Project?     @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  User           User?        @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  newsId        BigInt       @id @default(autoincrement())
+  categoryId    BigInt
+  title         String       @db.VarChar(255)
+  content       String
+  userId        BigInt?
+  publishedDate DateTime?    @db.Timestamptz(6)
+  status        news_status?
+  author        String?      @db.VarChar(100)
+  sourceUrl     String?      @db.VarChar(2048)
+  source        String?      @db.VarChar(2048)
+  projectId     BigInt?
+  tags          Json?
+  views         Int          @default(0)
+  createdAt     DateTime?    @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime?    @default(now()) @db.Timestamptz(6)
+  Comment       Comment[]
+  Category      Category     @relation(fields: [categoryId], references: [categoryId], onDelete: NoAction, onUpdate: NoAction)
+  Project       Project?     @relation(fields: [projectId], references: [projectId], onDelete: NoAction, onUpdate: NoAction)
+  User          User?        @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([categoryId], map: "idx_news_category")
+  @@index([status], map: "idx_news_status")
 }
 
 model Notification {
-  id         BigInt             @id @default(autoincrement())
-  user_id    BigInt?
-  title      String             @db.VarChar(255)
-  content    String
-  type       notification_type?
-  public     Int?               @default(1)
-  is_read    Boolean?           @default(false)
-  created_at DateTime?          @default(now()) @db.Timestamptz(6)
-  updated_at DateTime?          @default(now()) @db.Timestamptz(6)
-  User       User?              @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  notificationId BigInt             @id @default(autoincrement())
+  userId         BigInt?
+  title          String             @db.VarChar(255)
+  content        String
+  type           notification_type?
+  public         Int?               @default(1)
+  isRead         Boolean?           @default(false)
+  createdAt      DateTime?          @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime?          @default(now()) @db.Timestamptz(6)
+  User           User?              @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model OTP {
-  id          BigInt      @id @default(autoincrement())
+  otpId       BigInt      @id @default(autoincrement())
+  userId      BigInt?
   channel     otp_channel
   from        String?     @db.VarChar(100)
   destination String?     @db.VarChar(255)
   code        String      @db.VarChar(10)
   purpose     otp_purpose
-  expires_at  DateTime    @db.Timestamptz(6)
+  expiresAt   DateTime    @db.Timestamptz(6)
   delivered   Boolean?    @default(false)
-  user_id     BigInt?
-  created_at  DateTime?   @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime?   @default(now()) @db.Timestamptz(6)
-  User        User?       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt   DateTime?   @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime?   @default(now()) @db.Timestamptz(6)
+  User        User?       @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model Panorama {
-  id             BigInt       @id @default(autoincrement())
-  user_id        BigInt
-  property_id    BigInt?
-  project_id     BigInt?
-  building_id    BigInt?
-  subdivision_id BigInt?
-  base_url       String?      @db.VarChar(1024)
-  base_path      String?      @db.VarChar(2048)
-  order          Int?         @default(0)
-  location       String?      @db.VarChar(1024)
-  latitude       Float?
-  longitude      Float?
-  created_at     DateTime?    @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime?    @default(now()) @db.Timestamptz(6)
-  Building       Building?    @relation(fields: [building_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Project        Project?     @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Property       Property?    @relation(fields: [property_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Subdivision    Subdivision? @relation(fields: [subdivision_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  User           User         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  panoramaId    BigInt       @id @default(autoincrement())
+  userId        BigInt
+  propertyId    BigInt?
+  projectId     BigInt?
+  buildingId    BigInt?
+  subdivisionId BigInt?
+  baseUrl       String?      @db.VarChar(1024)
+  basePath      String?      @db.VarChar(2048)
+  order         Int?         @default(0)
+  location      String?      @db.VarChar(1024)
+  latitude      Float?
+  longitude     Float?
+  createdAt     DateTime?    @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime?    @default(now()) @db.Timestamptz(6)
+  Building      Building?    @relation(fields: [buildingId], references: [buildingId], onDelete: NoAction, onUpdate: NoAction)
+  Project       Project?     @relation(fields: [projectId], references: [projectId], onDelete: NoAction, onUpdate: NoAction)
+  Property      Property?    @relation(fields: [propertyId], references: [propertyId], onDelete: NoAction, onUpdate: NoAction)
+  Subdivision   Subdivision? @relation(fields: [subdivisionId], references: [subdivisionId], onDelete: NoAction, onUpdate: NoAction)
+  User          User         @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model Payment {
-  id                      BigInt          @id @default(autoincrement())
-  subscription_id         BigInt?
-  amount                  Float
-  payment_method          payment_method
-  payment_status          payment_status? @default(PENDING)
-  user_id                 BigInt
-  tax_rate                Float           @default(0)
-  amount_before_tax       Float?
-  description             String?
-  time                    DateTime        @db.Timestamptz(6)
-  payment_link            String?
-  qr_code                 String?
-  external_transaction_id String?         @db.VarChar(1024)
-  payment_for             String?         @db.VarChar(50)
-  wallet_transaction_id   BigInt?
-  listing_id              BigInt?
-  created_at              DateTime?       @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime?       @default(now()) @db.Timestamptz(6)
-  Listing                 Listing?        @relation(fields: [listing_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Subscription            Subscription?   @relation(fields: [subscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  User                    User            @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  paymentId             BigInt             @id @default(autoincrement())
+  userId                BigInt
+  subscriptionId        BigInt?
+  listingId             BigInt?
+  walletTransactionId   BigInt?
+  amount                Float
+  amountBeforeTax       Float?
+  taxRate               Float              @default(0)
+  paymentMethod         payment_method
+  paymentStatus         payment_status?    @default(PENDING)
+  paymentFor            payment_for?
+  description           String?
+  time                  DateTime           @db.Timestamptz(6)
+  paymentLink           String?
+  qrCode                String?
+  externalTransactionId String?            @db.VarChar(1024)
+  createdAt             DateTime?          @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime?          @default(now()) @db.Timestamptz(6)
+  Listing               Listing?           @relation(fields: [listingId], references: [listingId], onDelete: NoAction, onUpdate: NoAction)
+  Subscription          Subscription?      @relation(fields: [subscriptionId], references: [subscriptionId], onDelete: NoAction, onUpdate: NoAction)
+  User                  User               @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+  WalletTransaction     WalletTransaction? @relation(fields: [walletTransactionId], references: [transactionId], onDelete: NoAction, onUpdate: NoAction, map: "fk_payment_wallet_transaction")
 }
 
 model Plan {
-  id                BigInt         @id @default(autoincrement())
-  name              String         @db.VarChar(255)
-  description       String?
-  price             Float
-  duration_days     Int
-  max_listings      Int            @default(1)
-  featured_listings Int?           @default(0)
-  priority_support  Boolean        @default(false)
-  status            plan_status    @default(ACTIVE)
-  created_at        DateTime?      @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime?      @default(now()) @db.Timestamptz(6)
-  Subscription      Subscription[]
+  planId           BigInt         @id @default(autoincrement())
+  name             String         @db.VarChar(255)
+  description      String?
+  price            Float
+  durationDays     Int
+  maxListings      Int            @default(1)
+  featuredListings Int?           @default(0)
+  prioritySupport  Boolean        @default(false)
+  status           plan_status    @default(ACTIVE)
+  createdAt        DateTime?      @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime?      @default(now()) @db.Timestamptz(6)
+  Subscription     Subscription[]
 }
 
 model PriceHistory {
-  id          BigInt    @id @default(autoincrement())
-  property_id BigInt
-  price       Decimal   @db.Decimal(15, 2)
-  change_date DateTime  @db.Timestamptz(6)
-  created_at  DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
-  Property    Property  @relation(fields: [property_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  priceHistoryId BigInt    @id @default(autoincrement())
+  propertyId     BigInt
+  price          Decimal   @db.Decimal(15, 2)
+  changeDate     DateTime  @db.Timestamptz(6)
+  createdAt      DateTime? @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime? @default(now()) @db.Timestamptz(6)
+  Property       Property  @relation(fields: [propertyId], references: [propertyId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model Project {
-  id               BigInt        @id @default(autoincrement())
-  name             String        @db.VarChar(255)
-  investor_id      BigInt?
-  scale            Decimal?      @db.Decimal(10, 2)
-  density          String?       @db.VarChar(100)
-  num_blocks       Int?
-  description      String?
-  start_date       DateTime?     @db.Date
-  end_date         DateTime?     @db.Date
-  status           String?       @default("UPDATING") @db.VarChar(50)
-  project_type     String?       @db.VarChar(100)
-  primary_media_id BigInt?
-  area_p_id        Int?
-  area_w_id        Int?
-  old_area_p_id    Int?
-  old_area_d_id    Int?
-  old_area_w_id    Int?
-  premise_image    String?
-  created_at       DateTime?     @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime?     @default(now()) @db.Timestamptz(6)
-  Building         Building[]
-  Document         Document[]
-  FAQ              FAQ[]
-  Lead             Lead[]
-  Media            Media[]
-  News             News[]
-  Panorama         Panorama[]
-  Subdivision      Subdivision[]
-  Utility          Utility[]
+  projectId                           BigInt          @id @default(autoincrement())
+  name                                String          @db.VarChar(255)
+  investorId                          BigInt?
+  scale                               Decimal?        @db.Decimal(10, 2)
+  density                             String?         @db.VarChar(100)
+  numBlocks                           Int?
+  description                         String?
+  startDate                           DateTime?       @db.Date
+  endDate                             DateTime?       @db.Date
+  status                              project_status? @default(UPDATING)
+  projectType                         project_type?
+  primaryMediaId                      BigInt?
+  areaPId                             Int?
+  areaWId                             Int?
+  oldAreaPId                          Int?
+  oldAreaDId                          Int?
+  oldAreaWId                          Int?
+  premiseImage                        String?
+  createdAt                           DateTime?       @default(now()) @db.Timestamptz(6)
+  updatedAt                           DateTime?       @default(now()) @db.Timestamptz(6)
+  Building                            Building[]
+  Document                            Document[]
+  FAQ                                 FAQ[]
+  Lead                                Lead[]
+  Media_Media_projectIdToProject      Media[]         @relation("Media_projectIdToProject")
+  News                                News[]
+  Panorama                            Panorama[]
+  Investor                            Investor?       @relation(fields: [investorId], references: [investorId], onDelete: NoAction, onUpdate: NoAction)
+  Media_Project_primaryMediaIdToMedia Media?          @relation("Project_primaryMediaIdToMedia", fields: [primaryMediaId], references: [mediaId], onDelete: NoAction, onUpdate: NoAction, map: "fk_project_primary_media")
+  Property                            Property[]
+  Subdivision                         Subdivision[]
+  Utility                             Utility[]
 }
 
 model Property {
-  id                                      BigInt                 @id @default(autoincrement())
-  user_id                                 BigInt?
-  authorized_user_id                      BigInt?
-  authorized_agent_id                     BigInt?
-  project_id                              BigInt?
-  building_id                             BigInt?
-  subdivision_id                          BigInt?
-  address                                 String
-  title                                   String                 @db.VarChar(255)
-  floor                                   Int?
-  unit                                    String?                @db.VarChar(64)
-  description                             String?
-  property_type                           property_type?
-  width                                   Decimal?               @db.Decimal(5, 2)
-  length                                  Decimal?               @db.Decimal(5, 2)
-  floors                                  Int?
-  floor_area                              Decimal?               @db.Decimal(10, 2)
-  building_area                           Decimal?               @db.Decimal(10, 2)
-  land_area                               Decimal?               @db.Decimal(10, 2)
-  bedrooms                                Int?
-  toilets                                 Int?
-  status                                  property_status?
-  direction                               property_direction?
-  legal_document_type                     property_legal_type?
-  legal_document_number                   String?                @db.VarChar(64)
-  legal_status                            property_legal_status?
-  latitude                                Decimal?               @db.Decimal(10, 8)
-  longitude                               Decimal?               @db.Decimal(11, 8)
-  furniture                               property_furniture?
-  street_width                            Decimal?               @db.Decimal(5, 2)
-  primary_media_id                        BigInt?
-  usage_status                            property_usage_status? @default(OWNER_OCCUPIED)
-  area_p_id                               Int?
-  area_w_id                               Int?
-  old_area_p_id                           Int?
-  old_area_d_id                           Int?
-  old_area_w_id                           Int?
-  panorama_config                         Json?
-  created_at                              DateTime?              @default(now()) @db.Timestamptz(6)
-  updated_at                              DateTime?              @default(now()) @db.Timestamptz(6)
-  Appointment                             Appointment[]
-  Document                                Document[]
-  Favorite                                Favorite[]
-  Listing                                 Listing[]
-  Media                                   Media[]
-  Panorama                                Panorama[]
-  PriceHistory                            PriceHistory[]
-  User_Property_authorized_agent_idToUser User?                  @relation("Property_authorized_agent_idToUser", fields: [authorized_agent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  User_Property_authorized_user_idToUser  User?                  @relation("Property_authorized_user_idToUser", fields: [authorized_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  User_Property_user_idToUser             User?                  @relation("Property_user_idToUser", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Transaction                             Transaction[]
+  propertyId                            BigInt                        @id @default(autoincrement())
+  userId                                BigInt
+  authorizedUserId                      BigInt?
+  authorizedAgentId                     BigInt?
+  projectId                             BigInt?
+  buildingId                            BigInt?
+  subdivisionId                         BigInt?
+  address                               String
+  title                                 String                        @db.VarChar(255)
+  floor                                 Int?
+  unit                                  String?                       @db.VarChar(64)
+  description                           String?
+  propertyType                          property_type?
+  width                                 Decimal?                      @db.Decimal(5, 2)
+  length                                Decimal?                      @db.Decimal(5, 2)
+  floors                                Int?
+  floorArea                             Decimal?                      @db.Decimal(10, 2)
+  buildingArea                          Decimal?                      @db.Decimal(10, 2)
+  landArea                              Decimal?                      @db.Decimal(10, 2)
+  bedrooms                              Int?
+  toilets                               Int?
+  status                                property_status?
+  direction                             property_direction?
+  legalDocumentType                     property_legal_document_type?
+  legalDocumentNumber                   String?                       @db.VarChar(64)
+  legalStatus                           property_legal_status?
+  latitude                              Decimal?                      @db.Decimal(10, 8)
+  longitude                             Decimal?                      @db.Decimal(11, 8)
+  furniture                             property_furniture?
+  streetWidth                           Decimal?                      @db.Decimal(5, 2)
+  primaryMediaId                        BigInt?
+  usageStatus                           property_usage_status?        @default(OWNER_OCCUPIED)
+  areaPId                               Int?
+  areaWId                               Int?
+  oldAreaPId                            Int?
+  oldAreaDId                            Int?
+  oldAreaWId                            Int?
+  panoramaConfig                        Json?
+  createdAt                             DateTime?                     @default(now()) @db.Timestamptz(6)
+  updatedAt                             DateTime?                     @default(now()) @db.Timestamptz(6)
+  Appointment                           Appointment[]
+  Document                              Document[]
+  Favorite                              Favorite[]
+  Listing                               Listing[]
+  Media_Media_propertyIdToProperty      Media[]                       @relation("Media_propertyIdToProperty")
+  Panorama                              Panorama[]
+  PriceHistory                          PriceHistory[]
+  User_Property_authorizedAgentIdToUser User?                         @relation("Property_authorizedAgentIdToUser", fields: [authorizedAgentId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+  User_Property_authorizedUserIdToUser  User?                         @relation("Property_authorizedUserIdToUser", fields: [authorizedUserId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+  Building                              Building?                     @relation(fields: [buildingId], references: [buildingId], onDelete: NoAction, onUpdate: NoAction)
+  Project                               Project?                      @relation(fields: [projectId], references: [projectId], onDelete: NoAction, onUpdate: NoAction)
+  Subdivision                           Subdivision?                  @relation(fields: [subdivisionId], references: [subdivisionId], onDelete: NoAction, onUpdate: NoAction)
+  User_Property_userIdToUser            User                          @relation("Property_userIdToUser", fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+  Media_Property_primaryMediaIdToMedia  Media?                        @relation("Property_primaryMediaIdToMedia", fields: [primaryMediaId], references: [mediaId], onDelete: NoAction, onUpdate: NoAction, map: "fk_property_primary_media")
+  Transaction                           Transaction[]
+
+  @@index([projectId], map: "idx_property_project")
+  @@index([status], map: "idx_property_status")
+  @@index([propertyType], map: "idx_property_type")
+  @@index([userId], map: "idx_property_user")
 }
 
 model Subdivision {
-  id          BigInt     @id @default(autoincrement())
-  project_id  BigInt?
-  name        String     @db.VarChar(255)
-  description String?
-  created_at  DateTime?  @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime?  @default(now()) @db.Timestamptz(6)
-  Building    Building[]
-  Media       Media[]
-  Panorama    Panorama[]
-  Project     Project?   @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subdivisionId BigInt     @id @default(autoincrement())
+  projectId     BigInt?
+  name          String     @db.VarChar(255)
+  description   String?
+  createdAt     DateTime?  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime?  @default(now()) @db.Timestamptz(6)
+  Building      Building[]
+  Media         Media[]
+  Panorama      Panorama[]
+  Property      Property[]
+  Project       Project?   @relation(fields: [projectId], references: [projectId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model Subscription {
-  id                  BigInt               @id @default(autoincrement())
-  user_id             BigInt
-  plan_id             BigInt
-  start_date          DateTime             @db.Timestamptz(6)
-  end_date            DateTime             @db.Timestamptz(6)
-  status              subscription_status? @default(ACTIVE)
-  payment_status      payment_status?      @default(PENDING)
-  gold_listing_used   Int                  @default(0)
-  silver_listing_used Int                  @default(0)
-  normal_listing_used Int                  @default(0)
-  push_count_used     Int                  @default(0)
-  created_at          DateTime?            @default(now()) @db.Timestamptz(6)
-  updated_at          DateTime?            @default(now()) @db.Timestamptz(6)
-  Payment             Payment[]
-  Plan                Plan                 @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  User                User                 @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subscriptionId    BigInt               @id @default(autoincrement())
+  userId            BigInt
+  planId            BigInt
+  startDate         DateTime             @db.Timestamptz(6)
+  endDate           DateTime             @db.Timestamptz(6)
+  status            subscription_status? @default(ACTIVE)
+  paymentStatus     payment_status?      @default(PENDING)
+  goldListingUsed   Int                  @default(0)
+  silverListingUsed Int                  @default(0)
+  normalListingUsed Int                  @default(0)
+  pushCountUsed     Int                  @default(0)
+  createdAt         DateTime?            @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime?            @default(now()) @db.Timestamptz(6)
+  Payment           Payment[]
+  Plan              Plan                 @relation(fields: [planId], references: [planId], onDelete: NoAction, onUpdate: NoAction)
+  User              User                 @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model Suggestion {
-  id             BigInt          @id @default(autoincrement())
-  text           String
-  type           suggestion_type
-  matched_count  Int             @default(0)
-  foreign_key_id BigInt?
-  created_at     DateTime?       @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime?       @default(now()) @db.Timestamptz(6)
+  suggestionId BigInt          @id @default(autoincrement())
+  text         String
+  type         suggestion_type
+  matchedCount Int             @default(0)
+  foreignKeyId BigInt?
+  createdAt    DateTime?       @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime?       @default(now()) @db.Timestamptz(6)
 }
 
 model Transaction {
-  id                               BigInt              @id @default(autoincrement())
-  listing_id                       BigInt
-  agent_id                         BigInt?
-  seller_id                        BigInt
-  guest_id                         BigInt?
-  transaction_date                 DateTime            @db.Timestamptz(6)
-  price                            Float
-  status                           transaction_status? @default(OFFERED)
-  effective_date                   DateTime?           @db.Timestamptz(6)
-  expiration_date                  DateTime?           @db.Timestamptz(6)
-  contract_document                String?
-  property_id                      BigInt
-  created_at                       DateTime?           @default(now()) @db.Timestamptz(6)
-  updated_at                       DateTime?           @default(now()) @db.Timestamptz(6)
-  User_Transaction_agent_idToUser  User?               @relation("Transaction_agent_idToUser", fields: [agent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  User_Transaction_guest_idToUser  User?               @relation("Transaction_guest_idToUser", fields: [guest_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Listing                          Listing             @relation(fields: [listing_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  Property                         Property            @relation(fields: [property_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  User_Transaction_seller_idToUser User                @relation("Transaction_seller_idToUser", fields: [seller_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  transactionId                   BigInt              @id @default(autoincrement())
+  listingId                       BigInt
+  propertyId                      BigInt
+  agentId                         BigInt?
+  sellerId                        BigInt
+  guestId                         BigInt?
+  transactionDate                 DateTime            @db.Timestamptz(6)
+  price                           Float
+  status                          transaction_status? @default(OFFERED)
+  effectiveDate                   DateTime?           @db.Timestamptz(6)
+  expirationDate                  DateTime?           @db.Timestamptz(6)
+  contractDocument                String?
+  createdAt                       DateTime?           @default(now()) @db.Timestamptz(6)
+  updatedAt                       DateTime?           @default(now()) @db.Timestamptz(6)
+  User_Transaction_agentIdToUser  User?               @relation("Transaction_agentIdToUser", fields: [agentId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+  User_Transaction_guestIdToUser  User?               @relation("Transaction_guestIdToUser", fields: [guestId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+  Listing                         Listing             @relation(fields: [listingId], references: [listingId], onDelete: NoAction, onUpdate: NoAction)
+  Property                        Property            @relation(fields: [propertyId], references: [propertyId], onDelete: NoAction, onUpdate: NoAction)
+  User_Transaction_sellerIdToUser User                @relation("Transaction_sellerIdToUser", fields: [sellerId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([guestId], map: "idx_transaction_guest")
+  @@index([listingId], map: "idx_transaction_listing")
+  @@index([sellerId], map: "idx_transaction_seller")
+}
+
+model User {
+  userId                                    BigInt              @id @default(autoincrement())
+  email                                     String              @unique @db.VarChar(255)
+  passwordHash                              String              @db.VarChar(255)
+  fullname                                  String?             @db.VarChar(255)
+  phone                                     String?             @db.VarChar(20)
+  address                                   String?
+  idCardNumber                              String?             @db.VarChar(50)
+  idCardType                                user_idcard_type?
+  primaryRole                               user_primary_role?
+  status                                    user_status?
+  ekycVerified                              Int?                @default(0)
+  token                                     String?             @db.VarChar(1024)
+  expirationDate                            DateTime?           @db.Timestamptz(6)
+  resetPasswordOTP                          String?             @db.VarChar(1024)
+  resetPasswordOTPExpirationDate            DateTime?           @db.Timestamptz(6)
+  lastActive                                DateTime?           @default(now()) @db.Timestamptz(6)
+  agentCertificate                          String?
+  agentStatus                               user_agent_status?  @default(PENDING)
+  idCardDocuments                           Json?
+  avatar                                    String?
+  idCardPlaceIfIssue                        String?             @db.VarChar(256)
+  idCardIssueDate                           DateTime?           @db.Timestamptz(6)
+  balance                                   Float?
+  lifetimeBalance                           Float?
+  createdAt                                 DateTime?           @default(now()) @db.Timestamptz(6)
+  updatedAt                                 DateTime?           @default(now()) @db.Timestamptz(6)
+  Appointment                               Appointment[]
+  Audit                                     Audit[]
+  ChatRoom                                  ChatRoom[]
+  Comment                                   Comment[]
+  Device                                    Device[]
+  Document                                  Document[]
+  Favorite                                  Favorite[]
+  Feedback                                  Feedback[]
+  Lead                                      Lead[]
+  Listing                                   Listing[]
+  Media                                     Media[]
+  Member                                    Member[]
+  Message                                   Message[]
+  News                                      News[]
+  Notification                              Notification[]
+  OTP                                       OTP[]
+  Panorama                                  Panorama[]
+  Payment                                   Payment[]
+  Property_Property_authorizedAgentIdToUser Property[]          @relation("Property_authorizedAgentIdToUser")
+  Property_Property_authorizedUserIdToUser  Property[]          @relation("Property_authorizedUserIdToUser")
+  Property_Property_userIdToUser            Property[]          @relation("Property_userIdToUser")
+  Subscription                              Subscription[]
+  Transaction_Transaction_agentIdToUser     Transaction[]       @relation("Transaction_agentIdToUser")
+  Transaction_Transaction_guestIdToUser     Transaction[]       @relation("Transaction_guestIdToUser")
+  Transaction_Transaction_sellerIdToUser    Transaction[]       @relation("Transaction_sellerIdToUser")
+  WalletTransaction                         WalletTransaction[]
+
+  @@index([email], map: "idx_user_email")
+  @@index([phone], map: "idx_user_phone")
+  @@index([status], map: "idx_user_status")
 }
 
 model Utility {
-  id          BigInt    @id @default(autoincrement())
-  project_id  BigInt?
-  name        String    @db.VarChar(255)
-  type        String?   @db.VarChar(50)
+  utilityId   BigInt        @id @default(autoincrement())
+  projectId   BigInt?
+  name        String        @db.VarChar(255)
+  type        utility_type?
   description String?
-  created_at  DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
-  Project     Project?  @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt   DateTime?     @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime?     @default(now()) @db.Timestamptz(6)
+  Project     Project?      @relation(fields: [projectId], references: [projectId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model WalletTransaction {
-  id             BigInt          @id @default(autoincrement())
-  user_id        BigInt
-  amount         Float
-  ending_balance Float
-  payment_method payment_method
-  status         payment_status? @default(PENDING)
-  description    String?
-  created_at     DateTime?       @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime?       @default(now()) @db.Timestamptz(6)
-  User           User            @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  transactionId BigInt          @id @default(autoincrement())
+  userId        BigInt
+  amount        Float
+  endingBalance Float
+  paymentMethod payment_method
+  status        payment_status? @default(PENDING)
+  description   String?
+  createdAt     DateTime?       @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime?       @default(now()) @db.Timestamptz(6)
+  Payment       Payment[]
+  User          User            @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
 }
 
 enum appointment_status {
@@ -675,6 +739,12 @@ enum audit_action {
   CREATE
   UPDATE
   DELETE
+}
+
+enum comment_status {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum document_legal_type {
@@ -702,6 +772,12 @@ enum faq_status {
   INACTIVE
 }
 
+enum favorite_type {
+  PROPERTY
+  LISTING
+  NEWS
+}
+
 enum lead_status {
   NEW
   CONTACTED
@@ -709,9 +785,10 @@ enum lead_status {
   LOST
 }
 
-enum listing_price_currency {
-  VND
-  USD
+enum listing_credit_source {
+  PAYMENT
+  WALLET
+  SUBSCRIPTION
 }
 
 enum listing_status {
@@ -735,6 +812,13 @@ enum media_type {
   VIDEO
   D        @map("3D")
   PANORAMA
+}
+
+enum member_status {
+  INVITED
+  JOINED
+  REQUESTED
+  BLOCKED
 }
 
 enum message_type {
@@ -774,6 +858,12 @@ enum otp_purpose {
   CHANGE_PASSWORD
 }
 
+enum payment_for {
+  SUBSCRIPTION
+  LISTING
+  TOPUP
+}
+
 enum payment_method {
   CASH
   VNPAY
@@ -790,6 +880,27 @@ enum payment_status {
 enum plan_status {
   ACTIVE
   INACTIVE
+}
+
+enum project_status {
+  UPDATING
+  OPENNING
+  COMPLETED
+}
+
+enum project_type {
+  APARTMENT
+  OFFICE
+  MALL
+  NEW_URBAN
+  COMPLEX
+  SOCIAL_HOUSING
+  RESORT
+  INDUSTRIAL_PARK
+  TOWN_HOUSE
+  SHOPHOUSE
+  STREETFRONT
+  OTHER
 }
 
 enum property_direction {
@@ -809,18 +920,18 @@ enum property_furniture {
   NONE
 }
 
+enum property_legal_document_type {
+  SO_HONG
+  HDMB
+  OTHER
+}
+
 enum property_legal_status {
   LEGAL
   PLANNING_ISSUES
   UNDETERMINED
   REVOKED
   NON_EXISTENT
-}
-
-enum property_legal_type {
-  SO_HONG
-  HDMB
-  OTHER
 }
 
 enum property_status {
@@ -873,6 +984,11 @@ enum transaction_status {
   CANCELLED
 }
 
+enum user_agent_status {
+  PENDING
+  VERIFIED
+}
+
 enum user_idcard_type {
   CC
   PASSPORT
@@ -889,4 +1005,10 @@ enum user_status {
   ACTIVE
   BANNED
   DELETED
+}
+
+enum utility_type {
+  AMENITY
+  SERVICE
+  FACILITY
 }
