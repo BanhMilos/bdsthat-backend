@@ -1,0 +1,27 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "npm: dev",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "prisma:generate",
+			"type": "shell",
+			"command": "npx",
+			"args": ["prisma", "generate"],
+			"isBackground": false,
+			"group": "none"
+		}
+	]
+}
