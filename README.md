@@ -80,6 +80,35 @@ POST /auth/login
 }
 ```
 
+**Forgot Password**
+```
+POST /auth/forgot-password
+{
+  "email": "user@example.com"
+}
+```
+
+Sends email with password reset link.
+
+**Reset Password**
+```
+POST /auth/reset-password
+{
+  "token": "<reset_token_from_email>",
+  "password": "newpassword"
+}
+```
+
+**Change Password**
+```
+POST /auth/change-password
+{
+  "email": "user@example.com",
+  "currentPassword": "oldpassword",
+  "newPassword": "newpassword"
+}
+```
+
 ## Development
 
 ```bash
