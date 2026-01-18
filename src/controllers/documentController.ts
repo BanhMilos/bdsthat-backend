@@ -116,35 +116,28 @@ export const updateDocumentController = async (req: AuthRequest, res: Response) 
   }
 };
 
-export const deleteDocumentController = async (req: AuthRequest, res: Response) => {
+export const deleteDocumentController = async (req: Request, res: Response) => {
   try {
     const documentId = BigInt(req.params.id);
 
-    const result = await documentService.deleteDocument(documentId, req.userId!);
+    const result = await documentService.deleteDocument(documentId);
 
     res.json({
-      success: true,
-      message: result.message,
+      result: 'success',
+      reason: result.message,
     });
   } catch (error: any) {
     if (error.message === 'Document not found') {
       return res.status(404).json({
-        success: false,
-        error: error.message,
-      });
-    }
-
-    if (error.message.includes('Not authorized')) {
-      return res.status(403).json({
-        success: false,
-        error: error.message,
+        result: 'failed',
+        reason: error.message,
       });
     }
 
     console.error('Delete document error:', error);
     res.status(500).json({
-      success: false,
-      error: 'Failed to delete document',
+      result: 'failed',
+      reason: 'Failed to delete document',
     });
   }
 };

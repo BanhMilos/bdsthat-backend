@@ -45,7 +45,7 @@ export const uploadMediaController = async (req: AuthRequest, res: Response) => 
   }
 };
 
-export const getMediaController = async (req: Request, res: Response) => {
+export const getMediaController = async (req: AuthRequest, res: Response) => {
   try {
     const mediaId = BigInt(req.params.id);
 
@@ -53,20 +53,20 @@ export const getMediaController = async (req: Request, res: Response) => {
 
     if (!media) {
       return res.status(404).json({
-        success: false,
-        error: 'Media not found',
+        result: 'failed',
+        reason: 'Media not found',
       });
     }
 
     res.json({
-      success: true,
+      result: 'success',
       data: media,
     });
   } catch (error: any) {
     console.error('Get media error:', error);
     res.status(500).json({
-      success: false,
-      error: 'Failed to fetch media',
+      result: 'failed',
+      reason: 'Failed to fetch media',
     });
   }
 };

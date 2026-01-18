@@ -85,35 +85,35 @@ export const createPropertyController = async (req: AuthRequest, res: Response) 
   }
 };
 
-export const listPropertiesController = async (req: Request, res: Response) => {
+export const listPropertiesController = async (req: AuthRequest, res: Response) => {
   try {
     const validated = listPropertiesSchema.parse(req.query);
 
     const result = await propertyService.listProperties(validated);
 
     res.json({
-      success: true,
-      data: result.properties,
-      pagination: result.pagination,
+      result: 'success',
+      properties: result.properties,
+      total: result.pagination.total,
     });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
-        success: false,
-        error: 'Validation error',
+        result: 'failed',
+        reason: 'Validation error',
         details: error.errors,
       });
     }
 
     console.error('List properties error:', error);
     res.status(500).json({
-      success: false,
-      error: 'Failed to fetch properties',
+      result: 'failed',
+      reason: 'Failed to fetch properties',
     });
   }
 };
 
-export const getPropertyController = async (req: Request, res: Response) => {
+export const getPropertyController = async (req: AuthRequest, res: Response) => {
   try {
     const propertyId = BigInt(req.params.id);
 
@@ -121,20 +121,20 @@ export const getPropertyController = async (req: Request, res: Response) => {
 
     if (!property) {
       return res.status(404).json({
-        success: false,
-        error: 'Property not found',
+        result: 'failed',
+        reason: 'Property not found',
       });
     }
 
     res.json({
-      success: true,
-      data: property,
+      result: 'success',
+      property: property,
     });
   } catch (error: any) {
     console.error('Get property error:', error);
     res.status(500).json({
-      success: false,
-      error: 'Failed to fetch property',
+      result: 'failed',
+      reason: 'Failed to fetch property',
     });
   }
 };

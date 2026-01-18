@@ -88,17 +88,13 @@ export const updateDocument = async (documentId: bigint, userId: bigint, data: {
   return updated;
 };
 
-export const deleteDocument = async (documentId: bigint, userId: bigint) => {
+export const deleteDocument = async (documentId: bigint) => {
   const document = await prisma.document.findUnique({
     where: { documentId: documentId },
   });
 
   if (!document) {
     throw new Error('Document not found');
-  }
-
-  if (document.userId !== userId) {
-    throw new Error('Not authorized to delete this document');
   }
 
   // TODO: Delete physical file

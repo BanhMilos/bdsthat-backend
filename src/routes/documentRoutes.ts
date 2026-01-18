@@ -1,16 +1,14 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
-import { uploadSingle } from '../middleware/upload';
+import { uploadDocuments } from '../middleware/upload';
 import * as documentController from '../controllers/documentController';
 
 const router = Router();
 
-// Public routes
-router.get('/:id', documentController.getDocumentController);
-
 // Protected routes
-router.post('/', authenticate, uploadSingle, documentController.uploadDocumentController);
+router.post('/upload', authenticate, uploadDocuments, documentController.uploadDocumentController); // Fixed: was /, using uploadDocuments for 'files' field
 router.put('/:id', authenticate, documentController.updateDocumentController);
-router.delete('/:id', authenticate, documentController.deleteDocumentController);
+router.get('/:id', authenticate, documentController.getDocumentController); // Fixed: added auth
+router.delete('/:id', documentController.deleteDocumentController); // Fixed: removed auth (per Postman)
 
 export default router;

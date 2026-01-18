@@ -8,30 +8,29 @@ export const likeListingController = async (req: AuthRequest, res: Response) => 
 
     if (!listingId) {
       return res.status(400).json({
-        success: false,
-        error: 'listingId is required',
+        result: 'failed',
+        reason: 'listingId is required',
       });
     }
 
     const favorite = await favoriteService.likeListing(req.userId!, BigInt(listingId));
 
     res.status(201).json({
-      success: true,
-      data: favorite,
-      message: 'Listing added to favorites',
+      result: 'success',
+      favorite,
     });
   } catch (error: any) {
     if (error.message === 'Listing already liked') {
       return res.status(400).json({
-        success: false,
-        error: error.message,
+        result: 'failed',
+        reason: error.message,
       });
     }
 
     console.error('Like listing error:', error);
     res.status(500).json({
-      success: false,
-      error: 'Failed to add listing to favorites',
+      result: 'failed',
+      reason: 'Failed to add listing to favorites',
     });
   }
 };
@@ -42,29 +41,28 @@ export const unlikeListingController = async (req: AuthRequest, res: Response) =
 
     if (!listingId) {
       return res.status(400).json({
-        success: false,
-        error: 'listingId is required',
+        result: 'failed',
+        reason: 'listingId is required',
       });
     }
 
     const result = await favoriteService.unlikeListing(req.userId!, BigInt(listingId));
 
     res.json({
-      success: true,
-      message: result.message,
+      result: 'success',
     });
   } catch (error: any) {
     if (error.message === 'Listing not in favorites') {
       return res.status(404).json({
-        success: false,
-        error: error.message,
+        result: 'failed',
+        reason: error.message,
       });
     }
 
     console.error('Unlike listing error:', error);
     res.status(500).json({
-      success: false,
-      error: 'Failed to remove listing from favorites',
+      result: 'failed',
+      reason: 'Failed to remove listing from favorites',
     });
   }
 };
@@ -72,23 +70,22 @@ export const unlikeListingController = async (req: AuthRequest, res: Response) =
 export const getMyFavoritesController = async (req: AuthRequest, res: Response) => {
   try {
     const filters = {
-      page: req.query.page ? parseInt(req.query.page as string) : 1,
+      page: req.query.page ? parseInt(req.query.page as string) : 0,
       limit: req.query.limit ? parseInt(req.query.limit as string) : 20,
-      type: req.query.type as string | undefined,
+      listingType: req.query.listingType as string | undefined,
     };
 
     const result = await favoriteService.getMyFavorites(req.userId!, filters);
 
     res.json({
-      success: true,
-      data: result.favorites,
-      pagination: result.pagination,
+      result: 'success',
+      favorites: result.favorites,
     });
   } catch (error: any) {
     console.error('Get my favorites error:', error);
     res.status(500).json({
-      success: false,
-      error: 'Failed to fetch favorites',
+      result: 'failed',
+      reason: 'Failed to fetch favorites',
     });
   }
 };

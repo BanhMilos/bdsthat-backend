@@ -222,68 +222,82 @@ export const deleteListingController = async (req: AuthRequest, res: Response) =
 
 export const pushListingController = async (req: AuthRequest, res: Response) => {
   try {
-    const listingId = BigInt(req.params.id);
+    const { listingId } = req.body;
+    
+    if (!listingId) {
+      return res.status(400).json({
+        result: 'failed',
+        reason: 'listingId is required',
+      });
+    }
 
-    const listing = await listingService.pushListing(listingId, req.userId!);
+    const listing = await listingService.pushListing(BigInt(listingId), req.userId!);
 
     res.json({
-      success: true,
-      data: listing,
-      message: 'Listing pushed to top successfully',
+      result: 'success',
+      reason: 'Listing pushed to top successfully',
+      listing,
     });
   } catch (error: any) {
     if (error.message === 'Listing not found') {
       return res.status(404).json({
-        success: false,
-        error: error.message,
+        result: 'failed',
+        reason: error.message,
       });
     }
 
     if (error.message.includes('Not authorized') || error.message.includes('Only active') || error.message.includes('No push credits')) {
       return res.status(403).json({
-        success: false,
-        error: error.message,
+        result: 'failed',
+        reason: error.message,
       });
     }
 
     console.error('Push listing error:', error);
     res.status(500).json({
-      success: false,
-      error: 'Failed to push listing',
+      result: 'failed',
+      reason: 'Failed to push listing',
     });
   }
 };
 
 export const recreateListingController = async (req: AuthRequest, res: Response) => {
   try {
-    const listingId = BigInt(req.params.id);
+    const { listingId, ...listingData } = req.body;
+    
+    if (!listingId) {
+      return res.status(400).json({
+        result: 'failed',
+        reason: 'listingId is required',
+      });
+    }
 
-    const newListing = await listingService.recreateListing(listingId, req.userId!);
+    const newListing = await listingService.recreateListing(BigInt(listingId), req.userId!, listingData);
 
     res.status(201).json({
-      success: true,
-      data: newListing,
-      message: 'Listing recreated successfully',
+      result: 'success',
+      reason: 'Listing recreated successfully',
+      listing: newListing,
     });
   } catch (error: any) {
     if (error.message === 'Listing not found') {
       return res.status(404).json({
-        success: false,
-        error: error.message,
+        result: 'failed',
+        reason: error.message,
       });
     }
 
     if (error.message.includes('Not authorized')) {
       return res.status(403).json({
-        success: false,
-        error: error.message,
+        result: 'failed',
+        reason: error.message,
       });
     }
 
     console.error('Recreate listing error:', error);
     res.status(500).json({
-      success: false,
-      error: 'Failed to recreate listing',
+      result: 'failed',
+      reason: 'Failed to recreate listing',
     });
   }
 };
@@ -314,20 +328,31 @@ export const getMyListingsController = async (req: AuthRequest, res: Response) =
 
 export const getRelatedListingsController = async (req: Request, res: Response) => {
   try {
-    const listingId = BigInt(req.params.id);
-    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+    const { listingId, page, limit } = req.query;
+    
+    if (!listingId) {
+      return res.status(400).json({
+        result: 'failed',
+        reason: 'listingId is required',
+      });
+    }
 
-    const listings = await listingService.getRelatedListings(listingId, limit);
+    const pageNum = page ? parseInt(page as string) : 1;
+    const limitNum = limit ? parseInt(limit as string) : 5;
+
+    const listings = await listingService.getRelatedListings(BigInt(listingId as string), limitNum);
 
     res.json({
-      success: true,
-      data: listings,
+      result: 'success',
+      reason: 'Related listings retrieved successfully',
+      listings,
+      total: listings.length,
     });
   } catch (error: any) {
     console.error('Get related listings error:', error);
     res.status(500).json({
-      success: false,
-      error: 'Failed to fetch related listings',
+      result: 'failed',
+      reason: 'Failed to fetch related listings',
     });
   }
 };

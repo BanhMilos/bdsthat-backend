@@ -4,19 +4,21 @@ import * as listingController from '../controllers/listingController';
 
 const router = Router();
 
-// Protected routes (must come before /:id to avoid route conflicts)
-router.get('/my/listings', authenticate, listingController.getMyListingsController);
-router.post('/generate-ai', authenticate, listingController.generateListingWithAIController);
+// Protected routes - MUST come before /:id to avoid route conflicts
 router.post('/create', authenticate, listingController.createListingController);
+router.post('/push', authenticate, listingController.pushListingController); // Fixed: was /:id/push
+router.post('/recreate', authenticate, listingController.recreateListingController); // Fixed: was /:id/recreate
+router.post('/generate-ai-listing', authenticate, listingController.generateListingWithAIController); // Fixed: was /generate-ai
+router.get('/my', authenticate, listingController.getMyListingsController); // Fixed: was /my/listings
+router.get('/relative-listings', authenticate, listingController.getRelatedListingsController); // Fixed: was /:id/related, now with auth
+router.get('/seller/:userId', authenticate, listingController.getUserListingsController); // Fixed: was /user/:userId, now with auth
+
+// Dynamic ID routes - MUST come after specific paths
 router.put('/:id', authenticate, listingController.updateListingController);
 router.delete('/:id', authenticate, listingController.deleteListingController);
-router.post('/:id/push', authenticate, listingController.pushListingController);
-router.post('/:id/recreate', authenticate, listingController.recreateListingController);
 
-// Public routes
+// Public routes - general listing endpoints
 router.get('/', listingController.listListingsController);
-router.get('/user/:userId', listingController.getUserListingsController);
 router.get('/:id', optionalAuth, listingController.getListingController);
-router.get('/:id/related', listingController.getRelatedListingsController);
 
 export default router;

@@ -5,13 +5,11 @@ import * as mediaController from '../controllers/mediaController';
 
 const router = Router();
 
-// Public routes
-router.get('/:id', mediaController.getMediaController);
-
 // Protected routes
-router.post('/', authenticate, uploadMultiple, mediaController.uploadMediaController);
+router.get('/:id', authenticate, mediaController.getMediaController);
+router.post('/upload', authenticate, uploadMultiple, mediaController.uploadMediaController);
 router.put('/:id', authenticate, mediaController.updateMediaController);
 router.delete('/:id', authenticate, mediaController.deleteMediaController);
-router.post('/delete-multiple', authenticate, mediaController.deleteMultipleMediaController);
+router.post('/delete', authenticate, mediaController.deleteMultipleMediaController);
 
 export default router;

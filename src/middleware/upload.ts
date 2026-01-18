@@ -72,6 +72,7 @@ export const upload = multer({
 // Specific upload configurations
 export const uploadSingle = upload.single('file');
 export const uploadMultiple = upload.array('files', 20); // Max 20 files
+export const uploadDocuments = upload.single('files'); // For document upload endpoint
 export const uploadFields = upload.fields([
   { name: 'images', maxCount: 20 },
   { name: 'videos', maxCount: 5 },

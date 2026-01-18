@@ -361,7 +361,7 @@ export const pushListing = async (listingId: bigint, userId: bigint) => {
   return updated;
 };
 
-export const recreateListing = async (listingId: bigint, userId: bigint) => {
+export const recreateListing = async (listingId: bigint, userId: bigint, updateData?: any) => {
   const existingListing = await prisma.listing.findUnique({
     where: { listingId: listingId },
     include: {
@@ -377,16 +377,17 @@ export const recreateListing = async (listingId: bigint, userId: bigint) => {
     throw new Error('Not authorized to recreate this listing');
   }
 
-  // Create new listing with same data
+  // Create new listing with same data or updated data from request
   const newListing = await prisma.listing.create({
     data: {
-      propertyId: existingListing.propertyId,
+      propertyId: updateData?.propertyId ? BigInt(updateData.propertyId) : existingListing.propertyId,
       userId: existingListing.userId,
-      title: existingListing.title,
-      description: existingListing.description,
-      price: existingListing.price,
-      listingType: existingListing.listingType,
-      priority: 0, // Reset priority
+      title: updateData?.title || existingListing.title,
+      description: updateData?.description || existingListing.description,
+      price: updateData?.price || existingListing.price,
+      listingType: updateData?.listingType || existingListing.listingType,
+      priority: updateData?.priority !== undefined ? updateData.priority : 0,
+      creditSource: updateData?.creditSource || existingListing.creditSource,
       pushedDate: new Date(),
       expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       currency: existingListing.currency,

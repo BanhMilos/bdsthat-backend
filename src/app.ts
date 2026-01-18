@@ -9,6 +9,14 @@ import listingRouter from './routes/listingRoutes';
 import mediaRouter from './routes/mediaRoutes';
 import documentRouter from './routes/documentRoutes';
 import favoriteRouter from './routes/favoriteRoutes';
+import chatRouter from './routes/chatRoutes';
+import appointmentRouter from './routes/appointmentRoutes';
+import notificationRouter from './routes/notificationRoutes';
+import investorRouter from './routes/investorRoutes';
+import projectRouter from './routes/projectRoutes';
+import newsRouter from './routes/newsRoutes';
+import suggestRouter from './routes/suggestRoutes';
+import dashboardRouter from './routes/dashboardRoutes';
 
 const app = express();
 
@@ -22,13 +30,23 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// API Routes
-app.use('/auth', authRouter);
-app.use('/property', propertyRouter);
-app.use('/listing', listingRouter);
-app.use('/media', mediaRouter);
-app.use('/documents', documentRouter);
-app.use('/favorites', favoriteRouter);
+// API Routes with /api/v1/fe prefix to match Postman collection
+app.use('/api/v1/fe/user', authRouter);
+app.use('/api/v1/fe/user', favoriteRouter);
+app.use('/api/v1/fe/property', propertyRouter);
+app.use('/api/v1/fe/listing', listingRouter);
+app.use('/api/v1/fe/media', mediaRouter);
+app.use('/api/v1/fe/document', documentRouter);
+app.use('/api/v1/fe/chat', chatRouter);
+app.use('/api/v1/fe/appointment', appointmentRouter);
+app.use('/api/v1/fe/notification', notificationRouter);
+app.use('/api/v1/fe/investor', investorRouter);
+app.use('/api/v1/fe/project', projectRouter);
+app.use('/api/v1/fe/suggest', suggestRouter);
+app.use('/api/v1/fe/dashboard', dashboardRouter);
+
+// News routes with mixed prefixes (/api/v1/admin and /api/v1/fe)
+app.use('/api/v1', newsRouter);
 
 app.use(errorHandler);
 
