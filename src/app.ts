@@ -23,6 +23,23 @@ const app = express();
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(json({ limit: '10kb' }));
 
+// Custom JSON serializer to convert BigInt to number
+app.use((req, res, next) => {
+  const originalJson = res.json.bind(res);
+  res.json = function (data: any) {
+    const serialized = JSON.parse(
+      JSON.stringify(data, (key, value) => {
+        if (typeof value === 'bigint') {
+          return Number(value);
+        }
+        return value;
+      })
+    );
+    return originalJson(serialized);
+  };
+  next();
+});
+
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
