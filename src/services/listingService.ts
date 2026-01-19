@@ -1,6 +1,67 @@
 import prisma from '../utils/prisma';
 import { Prisma } from '@prisma/client';
 
+// Helpers to normalize IDs to numbers in API responses
+const toNumberIfBigInt = (v: any) => (typeof v === 'bigint' ? Number(v) : v);
+const mapUser = (u: any) =>
+  u
+    ? {
+        ...u,
+        userId: toNumberIfBigInt(u.userId),
+      }
+    : u;
+const mapProperty = (p: any) =>
+  p
+    ? {
+        ...p,
+        propertyId: toNumberIfBigInt(p.propertyId),
+        userId: toNumberIfBigInt(p.userId),
+        authorizedUserId:
+          p.authorizedUserId !== null && p.authorizedUserId !== undefined
+            ? toNumberIfBigInt(p.authorizedUserId)
+            : p.authorizedUserId,
+        authorizedAgencyId:
+          p.authorizedAgencyId !== null && p.authorizedAgencyId !== undefined
+            ? toNumberIfBigInt(p.authorizedAgencyId)
+            : p.authorizedAgencyId,
+        projectId:
+          p.projectId !== null && p.projectId !== undefined
+            ? toNumberIfBigInt(p.projectId)
+            : p.projectId,
+        buildingId:
+          p.buildingId !== null && p.buildingId !== undefined
+            ? toNumberIfBigInt(p.buildingId)
+            : p.buildingId,
+        areaId:
+          p.areaId !== null && p.areaId !== undefined
+            ? toNumberIfBigInt(p.areaId)
+            : p.areaId,
+        oldAreaId:
+          p.oldAreaId !== null && p.oldAreaId !== undefined
+            ? toNumberIfBigInt(p.oldAreaId)
+            : p.oldAreaId,
+        primaryMediaId:
+          p.primaryMediaId !== null && p.primaryMediaId !== undefined
+            ? toNumberIfBigInt(p.primaryMediaId)
+            : p.primaryMediaId,
+      }
+    : p;
+const mapListing = (l: any) =>
+  l
+    ? {
+        ...l,
+        listingId: toNumberIfBigInt(l.listingId),
+        propertyId: toNumberIfBigInt(l.propertyId),
+        userId: toNumberIfBigInt(l.userId),
+        agentId:
+          l.agentId !== null && l.agentId !== undefined
+            ? toNumberIfBigInt(l.agentId)
+            : l.agentId,
+        Property: mapProperty(l.Property),
+        User: mapUser(l.User),
+      }
+    : l;
+
 export interface CreateListingInput {
   userId: bigint;
   propertyId: bigint;
@@ -81,8 +142,7 @@ export const createListing = async (input: CreateListingInput) => {
       },
     },
   });
-
-  return listing;
+  return mapListing(listing);
 };
 
 export const listListings = async (filters: {
@@ -207,8 +267,9 @@ export const listListings = async (filters: {
     prisma.listing.count({ where }),
   ]);
 
+  const listingsMapped = listings.map(mapListing);
   return {
-    listings,
+    listings: listingsMapped,
     pagination: {
       page,
       limit,
@@ -233,7 +294,7 @@ export const getListingById = async (listingId: bigint, userId?: bigint) => {
       },
       User: {
         select: {
-            userId: true,
+          userId: true,
           fullname: true,
           phone: true,
           email: true,
@@ -249,8 +310,8 @@ export const getListingById = async (listingId: bigint, userId?: bigint) => {
     return null;
   }
 
-  // Increment view count if not the owner or admin
-  if (userId !== listing.userId) {
+  // Increment view count if not the owner
+  if (userId !== undefined && userId !== listing.userId) {
     await prisma.listing.update({
       where: { listingId: listingId },
       data: {
@@ -261,7 +322,7 @@ export const getListingById = async (listingId: bigint, userId?: bigint) => {
     });
   }
 
-  return listing;
+  return listing ? mapListing(listing) : null;
 };
 
 export const updateListing = async (listingId: bigint, userId: bigint, input: UpdateListingInput) => {
@@ -300,7 +361,7 @@ export const updateListing = async (listingId: bigint, userId: bigint, input: Up
     },
   });
 
-  return updated;
+  return mapListing(updated);
 };
 
 export const deleteListing = async (listingId: bigint, userId: bigint) => {
@@ -358,7 +419,7 @@ export const pushListing = async (listingId: bigint, userId: bigint) => {
     },
   });
 
-  return updated;
+  return mapListing(updated);
 };
 
 export const recreateListing = async (listingId: bigint, userId: bigint, updateData?: any) => {
@@ -404,7 +465,7 @@ export const recreateListing = async (listingId: bigint, userId: bigint, updateD
     },
   });
 
-  return newListing;
+  return mapListing(newListing);
 };
 
 export const getMyListings = async (userId: bigint, filters: {
@@ -442,8 +503,9 @@ export const getMyListings = async (userId: bigint, filters: {
     prisma.listing.count({ where }),
   ]);
 
+  const listingsMapped2 = listings.map(mapListing);
   return {
-    listings,
+    listings: listingsMapped2,
     pagination: {
       page,
       limit,
@@ -500,7 +562,7 @@ export const getRelatedListings = async (listingId: bigint, limit: number = 10) 
     ],
   });
 
-  return relatedListings;
+  return relatedListings.map(mapListing);
 };
 
 export const generateListingWithAI = async (propertyId: bigint, userId: bigint) => {
@@ -587,9 +649,11 @@ export const getUserListings = async (userId: bigint, filters: {
     }),
   ]);
 
+  const listingsMapped3 = listings.map(mapListing);
+  const userMapped = user ? mapUser(user) : user;
   return {
-    user,
-    listings,
+    user: userMapped,
+    listings: listingsMapped3,
     pagination: {
       page,
       limit,

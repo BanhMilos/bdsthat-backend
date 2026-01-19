@@ -1,5 +1,16 @@
 import prisma from '../utils/prisma';
 
+// Helpers to normalize IDs to numbers in API responses
+const toNumberIfBigInt = (v: any) => (typeof v === 'bigint' ? Number(v) : v);
+const mapNotification = (n: any) =>
+  n
+    ? {
+        ...n,
+        notificationId: toNumberIfBigInt(n.notificationId),
+        userId: toNumberIfBigInt(n.userId),
+      }
+    : n;
+
 export interface CreateNotificationInput {
   userId: bigint;
   title: string;
@@ -73,7 +84,7 @@ export const getMyNotifications = async (userId: bigint, filters: {
   ]);
 
   return {
-    notifications,
+    notifications: notifications.map(mapNotification),
     unreadCount,
     pagination: {
       page,
@@ -98,7 +109,7 @@ export const getNotificationById = async (notificationId: bigint, userId: bigint
     throw new Error('Not authorized to view this notification');
   }
 
-  return notification;
+  return mapNotification(notification);
 };
 
 // Mark notification as read
@@ -115,10 +126,12 @@ export const markAsRead = async (notificationId: bigint, userId: bigint) => {
     throw new Error('Not authorized to update this notification');
   }
 
-  return prisma.notification.update({
+  const updated = await prisma.notification.update({
     where: { notificationId },
     data: { isRead: true },
   });
+
+  return mapNotification(updated);
 };
 
 // Mark all as read

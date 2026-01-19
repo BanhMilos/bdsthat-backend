@@ -1,6 +1,50 @@
 import prisma from '../utils/prisma';
 import { Prisma } from '@prisma/client';
 
+// Helpers to normalize IDs to numbers in API responses
+const toNumberIfBigInt = (v: any) => (typeof v === 'bigint' ? Number(v) : v);
+const mapUser = (u: any) =>
+  u
+    ? {
+        ...u,
+        userId: toNumberIfBigInt(u.userId),
+      }
+    : u;
+const mapProperty = (p: any) =>
+  p
+    ? {
+        ...p,
+        propertyId: toNumberIfBigInt(p.propertyId),
+        userId: toNumberIfBigInt(p.userId),
+        authorizedUserId:
+          p.authorizedUserId !== null && p.authorizedUserId !== undefined
+            ? toNumberIfBigInt(p.authorizedUserId)
+            : p.authorizedUserId,
+        authorizedAgentId:
+          p.authorizedAgentId !== null && p.authorizedAgentId !== undefined
+            ? toNumberIfBigInt(p.authorizedAgentId)
+            : p.authorizedAgentId,
+        projectId:
+          p.projectId !== null && p.projectId !== undefined
+            ? toNumberIfBigInt(p.projectId)
+            : p.projectId,
+        buildingId:
+          p.buildingId !== null && p.buildingId !== undefined
+            ? toNumberIfBigInt(p.buildingId)
+            : p.buildingId,
+        subdivisionId:
+          p.subdivisionId !== null && p.subdivisionId !== undefined
+            ? toNumberIfBigInt(p.subdivisionId)
+            : p.subdivisionId,
+        primaryMediaId:
+          p.primaryMediaId !== null && p.primaryMediaId !== undefined
+            ? toNumberIfBigInt(p.primaryMediaId)
+            : p.primaryMediaId,
+        User_Property_userIdToUser: mapUser(p.User_Property_userIdToUser),
+        User_Property_authorizedAgentIdToUser: mapUser(p.User_Property_authorizedAgentIdToUser),
+      }
+    : p;
+
 export interface CreatePropertyInput {
   userId: bigint;
   address: string;
@@ -123,7 +167,7 @@ export const createProperty = async (input: CreatePropertyInput) => {
     },
   });
 
-  return property;
+  return mapProperty(property);
 };
 
 export const listProperties = async (filters: {
@@ -204,7 +248,7 @@ export const listProperties = async (filters: {
   ]);
 
   return {
-    properties,
+    properties: properties.map(mapProperty),
     pagination: {
       page,
       limit,
@@ -245,7 +289,7 @@ export const getPropertyById = async (propertyId: bigint) => {
     },
   });
 
-  return property;
+  return property ? mapProperty(property) : null;
 };
 
 export const updateProperty = async (propertyId: bigint, userId: bigint, input: UpdatePropertyInput) => {
@@ -309,7 +353,7 @@ export const updateProperty = async (propertyId: bigint, userId: bigint, input: 
     },
   });
 
-  return updated;
+  return mapProperty(updated);
 };
 
 export const deleteProperty = async (propertyId: bigint, userId: bigint) => {

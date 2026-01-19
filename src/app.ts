@@ -17,6 +17,7 @@ import projectRouter from './routes/projectRoutes';
 import newsRouter from './routes/newsRoutes';
 import suggestRouter from './routes/suggestRoutes';
 import dashboardRouter from './routes/dashboardRoutes';
+import miscRouter from './routes/miscRoutes';
 
 const app = express();
 
@@ -61,6 +62,7 @@ app.use('/api/v1/fe/investor', investorRouter);
 app.use('/api/v1/fe/project', projectRouter);
 app.use('/api/v1/fe/suggest', suggestRouter);
 app.use('/api/v1/fe/dashboard', dashboardRouter);
+app.use('/api/v1/fe/misc', miscRouter);
 
 // News routes with mixed prefixes (/api/v1/admin and /api/v1/fe)
 app.use('/api/v1', newsRouter);

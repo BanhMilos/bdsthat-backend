@@ -1,5 +1,46 @@
 import prisma from '../utils/prisma';
 
+// Helpers to normalize IDs to numbers in API responses
+const toNumberIfBigInt = (v: any) => (typeof v === 'bigint' ? Number(v) : v);
+const mapUser = (u: any) =>
+  u
+    ? {
+        ...u,
+        userId: toNumberIfBigInt(u.userId),
+      }
+    : u;
+const mapProperty = (p: any) =>
+  p
+    ? {
+        ...p,
+        propertyId: toNumberIfBigInt(p.propertyId),
+        userId: toNumberIfBigInt(p.userId),
+      }
+    : p;
+const mapListing = (l: any) =>
+  l
+    ? {
+        ...l,
+        listingId: toNumberIfBigInt(l.listingId),
+        propertyId: toNumberIfBigInt(l.propertyId),
+        userId: toNumberIfBigInt(l.userId),
+        Property: mapProperty(l.Property),
+        User: mapUser(l.User),
+      }
+    : l;
+const mapFavorite = (f: any) =>
+  f
+    ? {
+        ...f,
+        favoriteId: toNumberIfBigInt(f.favoriteId),
+        userId: toNumberIfBigInt(f.userId),
+        listingId: f.listingId ? toNumberIfBigInt(f.listingId) : f.listingId,
+        propertyId: f.propertyId ? toNumberIfBigInt(f.propertyId) : f.propertyId,
+        Property: mapProperty(f.Property),
+        Listing: mapListing(f.Listing),
+      }
+    : f;
+
 export const likeListing = async (userId: bigint, listingId: bigint) => {
   // Check if already liked
   const existing = await prisma.favorite.findFirst({
@@ -121,7 +162,7 @@ export const getMyFavorites = async (userId: bigint, filters: {
     );
 
     return {
-      favorites: favoritesWithListings,
+      favorites: favoritesWithListings.map(mapFavorite),
       pagination: {
         page,
         limit,
@@ -132,7 +173,7 @@ export const getMyFavorites = async (userId: bigint, filters: {
   }
 
   return {
-    favorites,
+    favorites: favorites.map(mapFavorite),
     pagination: {
       page,
       limit,
