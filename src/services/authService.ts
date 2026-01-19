@@ -28,6 +28,7 @@ export async function register(email: string, password: string) {
     data: { 
       email, 
       passwordHash, 
+      status: 'REGISTERED',
       token: verificationToken, 
       expirationDate: otpExpiresAt,
       resetPasswordOTP: otpHash,

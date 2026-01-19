@@ -61,7 +61,7 @@ export async function registerController(req: Request, res: Response, next: Next
   try {
     const parsed = registerSchema.parse(req.body);
     await register(parsed.email, parsed.password);
-    res.status(201).json({ message: 'Registration successful. Check your email to verify.' });
+    res.status(201).json({ result: "success", message: 'Registration successful. Check your email to verify.' });
   } catch (err) {
     if (err instanceof ZodError) return next(new AppError(err.errors[0].message, 400));
     next(err);
@@ -73,7 +73,7 @@ export async function verifyTokenGetController(req: Request, res: Response, next
     const token = req.query.token as string;
     if (!token) throw new AppError('Token required', 400);
     await verifyEmailByToken(token);
-    res.json({ message: 'Email verified' });
+    res.json({ result: "success", message: 'Email verified' });
   } catch (err) {
     next(err);
   }
@@ -83,7 +83,7 @@ export async function verifyTokenController(req: Request, res: Response, next: N
   try {
     const parsed = verifyTokenSchema.parse(req.body);
     await verifyEmailByToken(parsed.token);
-    res.json({ message: 'Email verified' });
+    res.json({ result: "success", message: 'Email verified' });
   } catch (err) {
     next(err);
   }
@@ -93,7 +93,7 @@ export async function verifyOtpController(req: Request, res: Response, next: Nex
   try {
     const parsed = verifyOtpSchema.parse(req.body);
     await verifyEmailByOtp(parsed.email, parsed.otp);
-    res.json({ message: 'Email verified' });
+    res.json({ result: "success", message: 'Email verified' });
   } catch (err) {
     next(err);
   }
