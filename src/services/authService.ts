@@ -96,7 +96,7 @@ export async function login(email?: string, phone?: string, password?: string) {
 
   // Return user object with token
   return {
-    userId: user.userId,
+    userId: Number(user.userId),
     email: user.email,
     fullname: user.fullname,
     avatar: user.avatar,
