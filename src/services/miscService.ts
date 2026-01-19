@@ -29,7 +29,7 @@ const mapConfig = (c: any) =>
 // Get provinces (top-level areas)
 export const getProvinces = async (isOldArea?: boolean) => {
   const where: any = {
-    type: 'PROVINCE',
+    type: 'P', // P = Province in area_type enum
   };
 
   if (isOldArea !== undefined) {
