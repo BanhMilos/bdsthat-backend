@@ -188,7 +188,7 @@ export async function getUserProfile(userId: bigint) {
   });
 
   if (!user) throw new AppError('User not found', 404);
-  return user;
+  return { ...user, userId: Number(user.userId) };
 }
 
 export async function updateUserProfile(userId: bigint, data: { fullname?: string; ekycVerified?: number }) {
@@ -206,7 +206,7 @@ export async function updateUserProfile(userId: bigint, data: { fullname?: strin
     },
   });
 
-  return user;
+  return { ...user, userId: Number(user.userId) };
 }
 
 export async function logoutUser(userId: bigint) {
@@ -287,7 +287,8 @@ export async function searchUsers(filters: { primaryRole?: string; q?: string; p
     prisma.user.count({ where }),
   ]);
 
-  return { users, total, page, limit };
+  const usersMapped = users.map(u => ({ ...u, userId: Number(u.userId) }));
+  return { users: usersMapped, total, page, limit };
 }
 
 export async function deleteUserAccount(userId: bigint, password: string) {
