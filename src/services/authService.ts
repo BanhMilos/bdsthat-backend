@@ -67,25 +67,61 @@ export async function verifyEmailByOtp(email: string, otp: string) {
   });
 }
 
-export async function login(email: string, password: string): Promise<string> {
-  const user = await prisma.user.findUnique({ where: { email } });
-  console.log('Login attempt for:', email);
-  console.log('User found:', !!user);
-  console.log('User ID:', user?.userId);
-  console.log('Has passwordHash:', !!user?.passwordHash);
-  console.log('Password hash (first 30 chars):', user?.passwordHash?.substring(0, 30));
+export async function login(email?: string, phone?: string, password?: string) {
+  if (!email && !phone) {
+    throw new AppError('Email or phone is required', 400);
+  }
+
+  if (!password) {
+    throw new AppError('Password is required', 400);
+  }
+
+  const where: any = {};
+  if (email) {
+    where.email = email;
+  } else if (phone) {
+    where.phone = phone;
+  }
+
+  const user = await prisma.user.findFirst({ where });
   
   if (!user) throw new AppError('Invalid credentials', 401);
 
   const match = await bcrypt.compare(password, user.passwordHash);
-  console.log('Password match:', match);
   
   if (!match) throw new AppError('Invalid credentials', 401);
 
-  console.log('About to create JWT token...');
-  const token = jwt.sign({ sub: user.userId.toString(), email: user.email }, jwtSecret, { expiresIn: '1h' });
-  console.log('JWT token created successfully');
-  return token;
+  // Generate JWT token
+  const token = jwt.sign({ sub: user.userId.toString(), email: user.email }, jwtSecret, { expiresIn: '24h' });
+
+  // Return user object with token
+  return {
+    userId: user.userId,
+    email: user.email,
+    fullname: user.fullname,
+    avatar: user.avatar,
+    phone: user.phone,
+    address: user.address,
+    token,
+    resetPasswordOTP: user.resetPasswordOTP,
+    resetPasswordOTPExpirationDate: user.resetPasswordOTPExpirationDate,
+    expirationDate: user.expirationDate,
+    idCardNumber: user.idCardNumber,
+    idCardType: user.idCardType,
+    idCardPlaceIfIssue: user.idCardPlaceIfIssue,
+    idCardIssueDate: user.idCardIssueDate,
+    primaryRole: user.primaryRole,
+    status: user.status,
+    ekycVerified: user.ekycVerified,
+    lastActive: user.lastActive,
+    agentCertificate: user.agentCertificate,
+    agentStatus: user.agentStatus,
+    idCardDocuments: user.idCardDocuments,
+    balance: user.balance,
+    lifetimeBalance: user.lifetimeBalance,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
 }
 
 export async function forgotPassword(email: string) {

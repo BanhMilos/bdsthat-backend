@@ -24,7 +24,15 @@ import { AuthRequest } from '../middleware/auth';
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
+const loginSchema = z.object({
+  email: z.string().email('Invalid email').optional(),
+  phone: z.string().optional(),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+}).refine((data) => data.email || data.phone, {
+  message: 'Either email or phone is required',
 });
 
 const verifyTokenSchema = z.object({ token: z.string().min(1, 'Token required') });
@@ -40,13 +48,13 @@ const forgotPasswordSchema = z.object({
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Token required'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 const changePasswordSchema = z.object({
   email: z.string().email('Invalid email'),
   currentPassword: z.string().min(1, 'Current password required'),
-  newPassword: z.string().min(8, 'New password must be at least 8 characters'),
+  newPassword: z.string().min(6, 'New password must be at least 6 characters'),
 });
 
 export async function registerController(req: Request, res: Response, next: NextFunction) {
@@ -93,10 +101,14 @@ export async function verifyOtpController(req: Request, res: Response, next: Nex
 
 export async function loginController(req: Request, res: Response, next: NextFunction) {
   try {
-    const parsed = registerSchema.parse(req.body);
-    const token = await login(parsed.email, parsed.password);
-    res.json({ token });
+    const parsed = loginSchema.parse(req.body);
+    const user = await login(parsed.email || undefined, parsed.phone || undefined, parsed.password);
+    res.json({
+      result: 'success',
+      user,
+    });
   } catch (err) {
+    if (err instanceof ZodError) return next(new AppError(err.errors[0].message, 400));
     if (err instanceof AppError) return next(err);
     return next(new AppError('Invalid credentials', 401));
   }
